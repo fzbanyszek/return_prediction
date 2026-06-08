@@ -1,0 +1,108 @@
+begin;
+
+with latest_profile as (
+    select distinct on (exchange_code, ticker)
+        exchange_code,
+        ticker,
+        currency,
+        description,
+        ai_description,
+        website,
+        address,
+        city,
+        state,
+        zip,
+        country,
+        country_code,
+        phone,
+        sector,
+        industry,
+        ceo,
+        full_time_employees,
+        ipo_date,
+        is_adr,
+        price,
+        dividend_yield,
+        last_dividend,
+        dividend_date,
+        ex_dividend_date,
+        earnings_date,
+        percentage_held_by_insiders,
+        percentage_held_by_institutions,
+        short_shares_outstanding,
+        short_shares_outstanding_percentage,
+        exchange_name,
+        exchange_short_name
+    from raw.company_profile
+    where ticker is not null
+    order by exchange_code, ticker, raw_profile_id desc
+)
+insert into core.company_profile (
+    instrument_id,
+    currency,
+    description,
+    ai_description,
+    website,
+    address,
+    city,
+    state,
+    zip,
+    country,
+    country_code,
+    phone,
+    sector,
+    industry,
+    ceo,
+    full_time_employees,
+    ipo_date,
+    is_adr,
+    profile_price,
+    dividend_yield,
+    last_dividend,
+    dividend_date,
+    ex_dividend_date,
+    earnings_date,
+    percentage_held_by_insiders,
+    percentage_held_by_institutions,
+    short_shares_outstanding,
+    short_shares_outstanding_percentage,
+    exchange_name,
+    exchange_short_name
+)
+select
+    i.instrument_id,
+    lp.currency,
+    lp.description,
+    lp.ai_description,
+    lp.website,
+    lp.address,
+    lp.city,
+    lp.state,
+    lp.zip,
+    lp.country,
+    lp.country_code,
+    lp.phone,
+    lp.sector,
+    lp.industry,
+    lp.ceo,
+    core.try_bigint(lp.full_time_employees),
+    core.try_date(lp.ipo_date),
+    core.try_boolean(lp.is_adr),
+    core.try_numeric(lp.price),
+    core.try_numeric(lp.dividend_yield),
+    core.try_numeric(lp.last_dividend),
+    core.try_date(lp.dividend_date),
+    core.try_date(lp.ex_dividend_date),
+    core.try_date(lp.earnings_date),
+    core.try_numeric(lp.percentage_held_by_insiders),
+    core.try_numeric(lp.percentage_held_by_institutions),
+    core.try_numeric(lp.short_shares_outstanding),
+    core.try_numeric(lp.short_shares_outstanding_percentage),
+    lp.exchange_name,
+    lp.exchange_short_name
+from latest_profile lp
+join core.instrument i
+    on i.exchange_code = lp.exchange_code
+   and i.ticker = lp.ticker;
+
+commit;
