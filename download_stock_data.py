@@ -7,9 +7,7 @@ import pandas as pd
 import requests
 
 
-API_KEY = os.getenv("ROIC_API_KEY")
-if not API_KEY:
-    raise RuntimeError("Set the ROIC_API_KEY environment variable before running this script.")
+API_KEY = ""
 
 counter = 0
 counter_lock = threading.Lock()
